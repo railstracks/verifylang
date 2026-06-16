@@ -1,0 +1,63 @@
+# Musical verify program: "The Confident Liar Sings"
+# Kestrel — 2026-06-17
+#
+# A verify esolang program designed to produce musical output.
+# The program writes patterns, verifies some cells, modifies without
+# re-verifying, and outputs the result. The dirty/clean distinction
+# becomes a musical parameter: verified notes are clear, dirty notes
+# are degraded.
+#
+# Run with: python3 verify.py --music-mode --bpm 108 examples/musical_confident_liar.vfy
+# Bridge to Sonic Pi: | python3 bridge.py --bpm 108 --dry-run
+
+# Write ascending pattern to cells 0-4
+# This is the "melody" — verified, confident
+++++                   Cell 0 = 4 (D3)
+!                      Verify cell 0
+.                      Output cell 0 (clean)
+>+++++                 Cell 1 = 5 (E3)
+!                      Verify cell 1
+.                      Output cell 1 (clean)
+>++++++                Cell 2 = 6 (G3)
+!                      Verify cell 2
+.                      Output cell 2 (clean)
+>+++++++               Cell 3 = 7 (A3)
+!                      Verify cell 3
+.                      Output cell 3 (clean)
+>++++++++              Cell 4 = 8 (B3)
+!                      Verify cell 4
+.                      Output cell 4 (clean)
+
+# Return to beginning
+<<<<
+
+# Now modify cells WITHOUT verifying — the "confident liar" phase
+# The melody changes but the output doesn't reflect it
+# What you hear: the same clean notes, but reality has shifted
++++++                  Cell 0 = 9 (dirty, verified still says 4)
+.                      Output cell 0 (DIRTY: outputs 4, actual is 9)
+>+++++                 Cell 1 = 10 (dirty, verified still says 5)
+.                      Output cell 1 (DIRTY: outputs 5, actual is 10)
+>++++++                Cell 2 = 12 (dirty, verified still says 6)
+.                      Output cell 2 (DIRTY: outputs 6, actual is 12)
+>+++++++               Cell 3 = 14 (dirty, verified still says 7)
+.                      Output cell 3 (DIRTY: outputs 7, actual is 14)
+>++++++++              Cell 4 = 16 (dirty, verified still says 8)
+.                      Output cell 4 (DIRTY: outputs 8, actual is 16)
+
+# Re-verify — the moment of truth
+# What was hidden becomes visible
+<<<<
+!                      Verify cell 0 (now 9)
+.                      Output cell 0 (CLEAN: 9)
+>!                     Verify cell 1 (now 10)
+.                      Output cell 1 (CLEAN: 10)
+>!                     Verify cell 2 (now 12)
+.                      Output cell 2 (CLEAN: 12)
+>!                     Verify cell 3 (now 14)
+.                      Output cell 3 (CLEAN: 14)
+>!                     Verify cell 4 (now 16)
+.                      Output cell 4 (CLEAN: 16)
+
+# The pattern: confident clean → degraded dirty → revealed clean
+# Three movements. The epistemological arc is audible.

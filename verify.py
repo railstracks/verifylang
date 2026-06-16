@@ -15,6 +15,8 @@ Options:
     --debug          Full execution trace
     --input TEXT     Provide input string (default: stdin)
     --ascii          Interpret output as ASCII characters
+    --music-mode     Output JSON events for musical bridge (OSC/Sonic Pi)
+    --bpm N          Tempo for music mode delay calculation (default 120)
 """
 
 import sys
@@ -59,7 +61,8 @@ class VerifyVM:
         return ch
 
     def execute(self, code: str, debug: bool = False, probe_output: bool = False,
-                dirty_trace: bool = False, ascii_out: bool = False):
+                dirty_trace: bool = False, ascii_out: bool = False,
+                music_mode: bool = False, bpm: int = 120):
         # Precompute bracket matching
         brackets = self._match_brackets(code)
         pc = 0
@@ -95,6 +98,19 @@ class VerifyVM:
                 else:
                     out_val = self.cell.value
                 self.output.append(out_val)
+                if music_mode:
+                    import json
+                    event = {
+                        "type": "note",
+                        "step": self.steps,
+                        "value": out_val,
+                        "actual": self.cell.value,
+                        "dirty": self.cell.dirty,
+                        "cell": self.ptr,
+                        "bpm": bpm,
+                    }
+                    sys.stdout.write(json.dumps(event) + "\n")
+                    sys.stdout.flush()
                 if dirty_trace:
                     status = "DIRTY" if self.cell.dirty else "CLEAN"
                     actual = self.cell.value
@@ -104,6 +120,17 @@ class VerifyVM:
             elif instr == '!':
                 self.cell.verified_value = self.cell.value
                 self.cell.dirty = False
+                if music_mode:
+                    import json
+                    event = {
+                        "type": "verify",
+                        "step": self.steps,
+                        "value": self.cell.value,
+                        "cell": self.ptr,
+                        "bpm": bpm,
+                    }
+                    sys.stdout.write(json.dumps(event) + "\n")
+                    sys.stdout.flush()
             elif instr == '?':
                 probe = 0 if self.cell.dirty else 1
                 self.output.append(probe)
@@ -173,6 +200,10 @@ def main():
                         help='Full execution trace on stderr')
     parser.add_argument('--strip', action='store_true',
                         help='Strip comments before execution')
+    parser.add_argument('--music-mode', action='store_true',
+                        help='Output JSON events for musical bridge')
+    parser.add_argument('--bpm', type=int, default=120,
+                        help='Tempo for music mode delay calculation')
     args = parser.parse_args()
 
     filename = args.run or args.file
@@ -197,9 +228,12 @@ def main():
         probe_output=args.probe_output,
         dirty_trace=args.dirty_trace,
         ascii_out=args.ascii,
+        music_mode=args.music_mode,
+        bpm=args.bpm,
     )
 
-    print(vm.get_output_text(ascii_out=args.ascii))
+    if not args.music_mode:
+        print(vm.get_output_text(ascii_out=args.ascii))
 
     if args.probe_output and vm.probes:
         sys.stderr.write(f"\nProbes: {vm.probes}\n")
