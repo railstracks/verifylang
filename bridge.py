@@ -97,12 +97,15 @@ def main():
             actual = event.get("actual", value)
 
             midi_note = value_to_midi(value)
+            actual_midi = value_to_midi(actual)
 
-            msg = [midi_note, 1 if dirty else 0, cell, step, actual]
+            msg = [midi_note, 1 if dirty else 0, cell, step, actual_midi]
             if args.dry_run:
                 status = "DIRTY" if dirty else "CLEAN"
+                gap = abs(actual_midi - midi_note)
                 print(f"OSC /verify_note note={midi_note} ({status}) "
-                      f"cell={cell} step={step} actual={actual}")
+                      f"cell={cell} step={step} actual_midi={actual_midi} "
+                      f"gap={gap}")
             else:
                 client.send_message("/verify_note", msg)
 
